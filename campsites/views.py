@@ -57,16 +57,16 @@ def get_campsite_data(request):
         "activity":"CAMPING",
         "apikey": api_key,
     }
-    print(params)
-    #API request to RIDB
+    
+#API request to RIDB
     response = requests.get(RIDB_URL_API,params=params)
 
     if response.status_code == 200:
         data = response.json()
         rec_data = data.get('RECDATA',[])
-        print(data)
 
-        #Loop through the data and save Campsite object to database
+        #Loop through the data, collect into a list
+        campsites_data = []
         for facility in rec_data:
             campsite_data = {
                 'facility_name':facility.get('FacilityName'),
@@ -75,12 +75,8 @@ def get_campsite_data(request):
                 'facility_description':facility.get('FacilityDescription'),
                 'facility_map_url':facility.get('FacilityMapURL'),
             }
-            serializer = CampsiteSerializer(data=campsite_data)
-            if serializer.is_valid():
-                serializer.save()
-            else:
-                pass
+            campsites_data.append(campsite_data)
 
-        return Response('Campsites data populated!',status=status.HTTP_200_OK)
+        return Response(campsites_data,status=status.HTTP_200_OK)
     else:
         return Response('Failed to retrieve API data', status=response.status_code) 
