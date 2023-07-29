@@ -1,3 +1,5 @@
+import os
+import requests
 from .models import Campsite
 from .serializers import CampsiteSerializer
 from rest_framework.decorators import api_view
@@ -41,3 +43,44 @@ def campsite_detail(request,id):
     elif request.method == 'DELETE':
         campsite.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+#new view to populate Campsite model with RIDB API data
+@api_view(['GET'])
+def get_campsite_data(request):
+    api_key = os.environ.get('API_KEY')
+    RIDB_URL_API = 'https://ridb.recreation.gov/api/v1/facilities'
+    params = {
+        "latitude": 32.311569,
+        "longitude": -110.929070,
+        "radius": 20,
+        "activity":"CAMPING",
+        "apikey": api_key,
+    }
+    print(params)
+    #API request to RIDB
+    response = requests.get(RIDB_URL_API,params=params)
+
+    if response.status_code == 200:
+        data = response.json()
+        rec_data = data.get('RECDATA',[])
+        print(data)
+
+        #Loop through the data and save Campsite object to database
+        for facility in rec_data:
+            campsite_data = {
+                'facility_name':facility.get('FacilityName'),
+                'facility_phone':facility.get('FacilityPhone'),
+                'facility_directions':facility.get('FacilityDirections'),
+                'facility_description':facility.get('FacilityDescription'),
+                'facility_map_url':facility.get('FacilityMapURL'),
+            }
+            serializer = CampsiteSerializer(data=campsite_data)
+            if serializer.is_valid():
+                serializer.save()
+            else:
+                pass
+
+        return Response('Campsites data populated!',status=status.HTTP_200_OK)
+    else:
+        return Response('Failed to retrieve API data', status=response.status_code) 
