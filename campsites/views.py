@@ -5,6 +5,10 @@ from .serializers import CampsiteSerializer
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
+from django.shortcuts import render
+
+# def home(request):
+#     return render(request,'home.html')
 
 #Function to Handle the user input and use it to make a LocationIQ API call for lat/lon    
 def process_campsite_data(ridb_data):
@@ -22,7 +26,7 @@ def process_campsite_data(ridb_data):
 
 
 @api_view(['GET'])
-def get_lat_lon(request):
+def get_campsite_data(request):
     address = request.GET.get('address') #gets the user input for address
     radius = request.GET.get('radius') #gets the user input for distance
     locationiq_api_key = os.environ.get('LOCATIONIQ_API_KEY')
@@ -56,15 +60,20 @@ def get_lat_lon(request):
             ridb_data = ridb_response.json().get('RECDATA', [])
             #process the RIDB data using created function
             processed_data = process_campsite_data(ridb_data)
-            print('processed_data:', processed_data)
+            # print('processed_data:', processed_data)
 
-            response = Response(processed_data, status=ridb_response.status_code)
-            response['X-Frame-Options'] = 'ALLOWALL'
-            return response
-        else:
-            return Response('Failed to retrieve RIDB API data', status=status.HTTP_200_ok)
-    else:
-        return Response('Failed to retrieve LocationIQ API data', status=response.status_code)
+            if not processed_data:
+                processed_data = []
+            
+            response_data = {
+                'processed_data': processed_data
+            }
+
+            return Response(processed_data, status=ridb_response.status_code)
+        
+        return Response('Failed to retrieve RIDB API data', status=status.HTTP_200_ok)
+    
+    return Response('Failed to retrieve LocationIQ API data', status=response.status_code)
 
 
 #STRETCH GOAL: USER PROFILE?
