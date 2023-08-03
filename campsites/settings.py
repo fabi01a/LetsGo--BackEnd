@@ -62,6 +62,7 @@ MIDDLEWARE = [
 
 CORS_ALLOWED_ORIGINS =  [
     'http://localhost:3000',
+    'https://letsgo-fe.onrender.com',
 ]
 
 ROOT_URLCONF = 'campsites.urls'

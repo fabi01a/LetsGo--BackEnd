@@ -7,8 +7,6 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.shortcuts import render
 
-# def home(request):
-#     return render(request,'home.html')
 
 #Function to Handle the user input and use it to make a LocationIQ API call for lat/lon    
 def process_campsite_data(ridb_data):
