@@ -28,7 +28,7 @@ def get_campsite_data(request):
     address = request.GET.get('address') #gets the user input for address
     radius = request.GET.get('radius') #gets the user input for distance
     locationiq_api_key = os.environ.get('LOCATIONIQ_API_KEY')
-
+    print("address: ", address)
     if not address:
         return Response("An Address or Zipcode is required", status=status.HTTP_400_BAD_REQUEST)
     

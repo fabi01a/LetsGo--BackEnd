@@ -19,11 +19,9 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    # path('get_campsite_data/', views.process_campsite_data),
     path('get_campsite_data/', views.get_campsite_data),
     # path('campsites/', views.campsites_list),
     # path('campsites/<int:id>', views.campsite_detail),
     path('admin/', admin.site.urls),
-  
 ]
 
