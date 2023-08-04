@@ -58,7 +58,7 @@ def get_campsite_data(request):
             ridb_data = ridb_response.json().get('RECDATA', [])
             #process the RIDB data using created function
             processed_data = process_campsite_data(ridb_data)
-            # print('processed_data:', processed_data)
+            print('processed_data:', processed_data)
 
             if not processed_data:
                 processed_data = []
