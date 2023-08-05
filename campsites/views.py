@@ -14,6 +14,7 @@ def process_campsite_data(ridb_data):
     for facility in ridb_data:
         campsite_data = {
             'facility_name':facility.get('FacilityName'),
+            'facility_address': facility.get('FacilityAddress'),
             'facility_phone':facility.get('FacilityPhone'),
             'facility_directions':facility.get('FacilityDirections'),
             'facility_description':facility.get('FacilityDescription'),
