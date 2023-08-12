@@ -64,7 +64,8 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
 ]
 
-CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_ALL_ORIGINS = False
+# Access-Control-Allow-Origin
 
 CORS_ALLOWED_ORIGINS =  [
     'http://localhost:3000',
