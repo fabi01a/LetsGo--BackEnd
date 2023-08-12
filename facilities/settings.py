@@ -33,10 +33,11 @@ environ.Env.read_env()
 SECRET_KEY = 'django-insecure-ov0$i%)lf@9hi8(df^s6=@3s%(^iywdu*3+o34*8f+3)mkt(nb'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False 
+DEBUG = True 
 
 ALLOWED_HOSTS = ['*']
 
+AUTH_USER_MODEL = 'user.User'
 
 # Application definition
 
@@ -44,14 +45,13 @@ INSTALLED_APPS = [
     'corsheaders',
     'rest_framework',
     'facilities',
+    'facilities.user',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'core',
-    'core.user'
 ]
 
 MIDDLEWARE = [
@@ -68,6 +68,15 @@ CORS_ALLOWED_ORIGINS =  [
     'http://localhost:3000',
     'https://letsgo-fe.onrender.com',
 ]
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+    'DEFAULT_RENDERER_CLASSES': (
+        'rest_framework.renderers.JSONRenderer',
+    )
+}
 
 ROOT_URLCONF = 'facilities.urls'
 
@@ -97,18 +106,16 @@ WSGI_APPLICATION = 'facilities.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': BASE_DIR / 'db.sqlite3',
-#     }
-# }
 
 #Render PostgresSQL database(Live)
 import dj_database_url
 
 DATABASES = {
-    'default' : dj_database_url.parse(env('DATABASE_URL'))
+    'default': dj_database_url.config(
+        default=env('DATABASE_URL'),
+        conn_max_age=600,
+        ssl_require=True,  # Add this line to enforce SSL connection
+    )
 }
 
 # Password validation

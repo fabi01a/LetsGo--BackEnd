@@ -20,9 +20,12 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.urls import path, include
 from . import views
+from rest_framework import routers
+from facilities.routers import routes as router
 
 urlpatterns = [
     path('get_campsite_data/', views.get_campsite_data),
+    path('api/', include((router.urls, 'facilities'), namespace='facility-api')),
     # path('profile/', views.user_profile,name='user_profile'),
     # path('profile/', include('django.contrib.auth.urls')),
     # path('profile/favorites/', views.favorite_facilities,name='favorite_facilities'),

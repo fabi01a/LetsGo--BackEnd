@@ -1,10 +1,5 @@
 from rest_framework import serializers
-from .models import UserProfile, Facility
-
-class UserProfileSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = UserProfile
-        fields = ['id', 'user', 'name', 'date_created']
+from .models import Facility
 
 class FacilitySerializer(serializers.ModelSerializer):
     class Meta:
