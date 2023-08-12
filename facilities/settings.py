@@ -67,6 +67,7 @@ MIDDLEWARE = [
 CORS_ALLOWED_ORIGINS =  [
     'http://localhost:3000',
     'https://letsgo-fe.onrender.com',
+    'http://127.0.0.1:3000'
 ]
 
 REST_FRAMEWORK = {
