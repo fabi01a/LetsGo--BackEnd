@@ -33,7 +33,7 @@ environ.Env.read_env()
 SECRET_KEY = 'django-insecure-ov0$i%)lf@9hi8(df^s6=@3s%(^iywdu*3+o34*8f+3)mkt(nb'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True 
+DEBUG = False 
 
 ALLOWED_HOSTS = ['*']
 
@@ -54,17 +54,32 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 ]
 
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'DEBUG',  # Adjust as needed
+    },
+}
+
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
+    # 'corsheaders.middleware.CorsPostCsrfMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
 ]
 
-CORS_ALLOW_ALL_ORIGINS = False
+CORS_ALLOW_ALL_ORIGINS = True
 # Access-Control-Allow-Origin
 
 CORS_ALLOWED_ORIGINS =  [
@@ -87,6 +102,10 @@ ROOT_URLCONF = 'facilities.urls'
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+# SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+# SESSION_COOKIE_SECURE = True
+# CSRF_COOKIE_SECURE = True
 
 TEMPLATES = [
     {
@@ -118,7 +137,7 @@ DATABASES = {
     'default': dj_database_url.config(
         default=env('DATABASE_URL'),
         conn_max_age=600,
-        ssl_require=True,  # Add this line to enforce SSL connection
+        ssl_require=False,  # Add this line to enforce SSL connection
     )
 }
 

@@ -2,13 +2,17 @@ import os
 import logging
 import requests
 from .models import Facility
-# from .serializers import FacilitySerializer
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
+from facilities.user.models import User
+from facilities.auth.serializers import RegisterSerializer
+from facilities.user.serializers import UserSerializer
+from .serializers import FacilitySerializer
 from rest_framework import status
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.response import Response
 from django.shortcuts import render
 
+logger = logging.getLogger(__name__)
 
 #Function to Handle the user input and use it to make a LocationIQ API call for lat/lon    
 def process_campsite_data(ridb_data):
@@ -50,12 +54,6 @@ def process_campsite_data(ridb_data):
                 'postal_code': facility_address.get('PostalCode')
             }
     
-            # facility_address = facility_address_data[0]
-            # campsite_data['facility_address']['street_address'] = facility_address.get('FacilityStreetAddress1')
-            # campsite_data['facility_address']['city'] = facility_address.get('City')
-            # campsite_data['facility_address']['state'] = facility_address.get('AddressStateCode')
-            # campsite_data['facility_address']['postal_code'] = facility_address.get('PostalCode')
-
         campsites_data.append(campsite_data)
 
     return campsites_data
@@ -106,7 +104,6 @@ def get_campsite_data(request):
                 'processed_data': processed_data
                 
             }
-
             return Response(processed_data, status=ridb_response.status_code)
     
         return Response(processed_data, status=ridb_response.status_code)
@@ -115,25 +112,47 @@ def get_campsite_data(request):
 
 
 
-#STRETCH GOAL: USER PROFILE?
-# def logoutUser(request):
-#     logout(request)
-#     return redirect('login')
+@api_view(['POST'])  # Change this to POST for registration
+@permission_classes([AllowAny])  # Allow unauthenticated access for registration
+def register(request):
+    data = request.data
+    #check if email/password provided
+    email = data.get('email')
+    password = data.get('password')
+    if not email or not password:
+        return Response({'error': 'Email and password are required'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    # Check if user with the same email already exists
+    if User.objects.filter(email=email).exists():
+        return Response({'error': 'User with this email already exists'}, status=status.HTTP_400_BAD_REQUEST)
 
-#GET request to retrieve user profile
-# @api_view(['GET'])
-# @permission_classes([IsAuthenticated])
-# def user_profile(request):
-#     user = request.user #gets the authenticated user from request
-#     profile = user.userprofile #retrieves user profile using the 1-2-many relationshup between user model and userProfile model
-#     serialized_profile = UserProfileSerializer(profile)
-#     return Response(serialized_profile.data)#returns serialized profile data as HTTP response
+    # Create the user
+    user = User.objects.create_user(username=email, email=email, password=password)
+    
+    # Create user profile (if applicable)
+    # profile = UserProfile.objects.create(user=user, ...)
+    # Replace UserProfile with your actual profile model and data
 
+    # Serialize the user profile data
+    serialized_user = UserSerializer(user)
+    
+    # Process registration logic
+    return Response({'message': 'Registration successful', 'user': serialized_user.data})
 
+# GET request to retrieve user profile
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def user_profile(request):
+    user = request.user #gets the authenticated user from request
+    profile = user.userprofile #retrieves user profile using the 1-2-many relationshup between user model and userProfile model
+    serialized_profile = UserSerializer(profile)
+    return Response(serialized_profile.data)#returns serialized profile data as HTTP response
+
+#FAVORITES
 # #GET request for retrieving user's favorites
 # @api_view(['GET', 'POST'])
 # @permission_classes([IsAuthenticated])
-# def chfavorite_facilities(request): 
+# def favorite_facilities(request): 
 #     user = request.user
 #     favorite_facilities = user.userprofile.favorite_facilities.all() #retrieves user's fav facilities 
 #     serialized_facilities = serialized_facilities(favorite_facilities)

@@ -19,17 +19,21 @@ from django.contrib.auth import views as auth_views
 from django.conf import settings
 from django.conf.urls.static import static
 from django.urls import path, include
+from facilities.user.models import User
+from facilities.user.viewsets import UserRegistrationView
 from . import views
+from .views import user_profile #favorite_facilities, adjusting_favorite_facilities
 from rest_framework import routers
 from facilities.routers import routes as router
 
 urlpatterns = [
     path('get_campsite_data/', views.get_campsite_data),
     path('api/', include((router.urls, 'facilities'), namespace='facility-api')),
-    # path('profile/', views.user_profile,name='user_profile'),
+    path('auth/register/', UserRegistrationView.as_view(), name='user_registration'),
+    path('protected/profile/', views.user_profile,name='user_profile'),
     # path('profile/', include('django.contrib.auth.urls')),
-    # path('profile/favorites/', views.favorite_facilities,name='favorite_facilities'),
-    # path('profile/favorites/<int:id>/', views.adjusting_favorite_facilities,name='adjusting_favorite_facilities'),
+    # path('protected/profile/favorites/', views.favorite_facilities,name='favorite_facilities'),
+    # path('protected/profile/favorites/<int:id>/', views.adjusting_favorite_facilities,name='adjusting_favorite_facilities'),
     path('admin/', admin.site.urls),
 ]
 

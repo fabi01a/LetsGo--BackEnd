@@ -1,8 +1,9 @@
-from facilities.user.serializers import UserSerializer
 from facilities.user.models import User
-from rest_framework import viewsets
-from rest_framework.permissions import IsAuthenticated
-from rest_framework import filters
+from facilities.user.serializers import UserSerializer
+from facilities.auth.serializers import RegisterSerializer
+from rest_framework import filters, viewsets, generics, status
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated, AllowAny
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -24,3 +25,34 @@ class UserViewSet(viewsets.ModelViewSet):
         self.check_object_permissions(self.request, obj)
 
         return obj
+
+class UserRegistrationView(generics.CreateAPIView):
+    
+    serializer_class = RegisterSerializer
+    permission_classes = [AllowAny]
+    
+    def post(self,request, *args, **kwargs):
+        print('RECEIVED REGISTRATION REQ:', request.data)
+        serializer = self.get_serializer(data=request.data)
+        print('SERIALIZER DATA:', serializer.initial_data)
+
+        if serializer.is_valid():
+            print("Serializer is valid")
+        else:
+            print("Serializer errors:", serializer.errors)  # Add this line to print serializer errors
+
+        try:
+            self.perform_create(serializer)
+            headers = self.get_success_headers(serializer.data)
+            return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        except Exception as e:
+            print("Error during registration:", str(e))  # Add this line to print any exceptions
+
+            return Response(
+                {"error": "An error occurred during registration"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+        # serializer.is_valid(raise_exception=True)
+        # self.perform_create(serializer)
+        # headers = self.get_success_headers(serializer.data)
+        # return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
