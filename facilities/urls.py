@@ -28,7 +28,7 @@ from facilities.routers import routes as router
 
 urlpatterns = [
     path('get_campsite_data/', views.get_campsite_data),
-    path('api/', include((router.urls, 'facilities'), namespace='facility-api')),
+    path('api/', include((router.urls, 'facilities'), namespace='facilities-api')),
     path('auth/register/', UserRegistrationView.as_view(), name='user_registration'),
     path('protected/profile/', views.user_profile,name='user_profile'),
     # path('profile/', include('django.contrib.auth.urls')),
