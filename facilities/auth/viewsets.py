@@ -5,7 +5,6 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
 from facilities.auth.serializers import LoginSerializer, RegisterSerializer
-# from facilities.user.models import User
 
 
 class LoginViewSet(viewsets.ModelViewSet, TokenObtainPairView):
@@ -24,7 +23,6 @@ class LoginViewSet(viewsets.ModelViewSet, TokenObtainPairView):
         return Response(serializer.validated_data, status=status.HTTP_200_OK)
 
 
-
 class RegistrationViewSet(viewsets.ModelViewSet, TokenObtainPairView):
     serializer_class = RegisterSerializer
     permission_classes = (AllowAny,)
@@ -37,14 +35,14 @@ class RegistrationViewSet(viewsets.ModelViewSet, TokenObtainPairView):
         user = serializer.save()
         refresh = RefreshToken.for_user(user)
         res = {
-            "refresh": str(refresh),
-            "access": str(refresh.access_token),
+            'refresh': str(refresh),
+            'access': str(refresh.access_token),
         }
 
         return Response({
-            "user": serializer.data,
-            "refresh": res["refresh"],
-            "token": res["access"]
+            'user': serializer.data,
+            'refresh': res['refresh'],
+            'token': res['access']
         }, status=status.HTTP_201_CREATED)
 
 

@@ -1,5 +1,4 @@
 from django.db import models
-
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 
 
@@ -35,7 +34,6 @@ class UserManager(BaseUserManager):
         user.save(using=self._db)
 
         return user
-
 
 class User(AbstractBaseUser, PermissionsMixin):
     # username = models.CharField(db_index=True, max_length=255, unique=True)

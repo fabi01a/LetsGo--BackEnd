@@ -21,6 +21,9 @@ from django.conf.urls.static import static
 from django.urls import path, include
 from facilities.user.models import User
 from facilities.user.viewsets import UserRegistrationView
+from facilities.auth.viewsets import LoginSerializer
+from rest_framework.generics import RetrieveUpdateAPIView
+from .profileview import ProfileAPI
 from . import views
 from .views import user_profile #favorite_facilities, adjusting_favorite_facilities
 from rest_framework import routers
@@ -30,7 +33,9 @@ urlpatterns = [
     path('get_campsite_data/', views.get_campsite_data),
     path('api/', include((router.urls, 'facilities'), namespace='facilities-api')),
     path('auth/register/', UserRegistrationView.as_view(), name='user_registration'),
-    path('protected/profile/', views.user_profile,name='user_profile'),
+    path('login/', auth_views.LoginView.as_view(), name='login'),
+    path('api/users/<user_id>/profile/', ProfileAPI.as_view()),
+    # path('protected/profile/', views.UserProfileAPIView.as_view(),name='user_profile'),
     # path('profile/', include('django.contrib.auth.urls')),
     # path('protected/profile/favorites/', views.favorite_facilities,name='favorite_facilities'),
     # path('protected/profile/favorites/<int:id>/', views.adjusting_favorite_facilities,name='adjusting_favorite_facilities'),

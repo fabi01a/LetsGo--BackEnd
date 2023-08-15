@@ -4,6 +4,7 @@ from facilities.auth.serializers import RegisterSerializer
 from rest_framework import filters, viewsets, generics, status
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
+from django.shortcuts import get_object_or_404
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -21,7 +22,10 @@ class UserViewSet(viewsets.ModelViewSet):
     def get_object(self):
         lookup_field_value = self.kwargs[self.lookup_field]
 
-        obj = User.objects.get(lookup_field_value)
+        lookup_kwargs = {self.lookup_field: lookup_field_value}
+        obj = get_object_or_404(User, **lookup_kwargs)
+
+        # obj = User.objects.get(lookup_field_value)
         self.check_object_permissions(self.request, obj)
 
         return obj
@@ -49,10 +53,6 @@ class UserRegistrationView(generics.CreateAPIView):
             print("Error during registration:", str(e))  # Add this line to print any exceptions
 
             return Response(
-                {"error": "An error occurred during registration"},
+                {'error': 'An error occurred during registration'},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-        # serializer.is_valid(raise_exception=True)
-        # self.perform_create(serializer)
-        # headers = self.get_success_headers(serializer.data)
-        # return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)

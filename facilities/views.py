@@ -1,28 +1,28 @@
 import os
-import logging
 import requests
-from .models import Facility
+from .models import Facility, Profile
 from facilities.user.models import User
 from facilities.auth.serializers import RegisterSerializer
 from facilities.user.serializers import UserSerializer
-from .serializers import FacilitySerializer
+from .serializers import FacilitySerializer, ProfileSerializer
 from rest_framework import status
+from rest_framework.views import APIView
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
+from rest_framework.generics import RetrieveUpdateAPIView
 
-logger = logging.getLogger(__name__)
 
-#Function to Handle the user input and use it to make a LocationIQ API call for lat/lon    
+# HANDLE USER INPUT -> USE FOR LAT/LON LOCATIONIQ API CALL   
 def process_campsite_data(ridb_data):
     campsites_data = []
     for facility in ridb_data:
 
         #get MEDIA image from URL
-        media_list = facility.get('MEDIA', [])
-        image_url = next((media['URL'] for media in media_list if media['URL'].lower().endswith('.jpeg')),None)
-        # if not image_url:
+        # media_list = facility.get('MEDIA', [])
+        # image_url = next((media['URL'] for media in media_list if media['URL'].lower().endswith('.jpeg')),None)
+        # # if not image_url:
         #     image_url = 'default_image.jpg'
 
         campsite_data = {
@@ -38,16 +38,18 @@ def process_campsite_data(ridb_data):
             'facility_description':facility.get('FacilityDescription'),
             # 'facility_image_url': image_url,
         }
-        print("****************CAMPSITE DATA********************")
-        print('campsite_data:',campsite_data)
-        #check if facility address is available in the data
+        # print("****************CAMPSITE DATA********************")
+        # print('campsite_data:',campsite_data)
+
         facility_address_data = facility.get('FACILITYADDRESS',[])
+        
         if facility_address_data:
             facility_address = facility_address_data[0]
-            print("****************FACILITY ADDRESS DATA********************")
-            print('facility address data:', facility_address)
+            # print("****************FACILITY ADDRESS DATA********************")
+            # print('facility address data:', facility_address_data)
 
             campsite_data['facility_address'] = {
+                # 'facility_id': facility_address.get('FacilityID'),
                 'street_address':facility_address.get('FacilityStreetAddress1'),
                 'city': facility_address.get('City'),
                 'state': facility_address.get('AddressStateCode'),
@@ -58,7 +60,7 @@ def process_campsite_data(ridb_data):
 
     return campsites_data
 
-
+#API CALLS
 @api_view(['GET'])
 def get_campsite_data(request):
     address = request.GET.get('address') #gets the user input for address
@@ -94,16 +96,14 @@ def get_campsite_data(request):
             ridb_data = ridb_response.json().get('RECDATA', [])
             #process the RIDB data using created function
             processed_data = process_campsite_data(ridb_data)
-            print(processed_data)
-            logging.debug("ProcessedData: %s", processed_data)
 
             if not processed_data:
                 processed_data = []
 
             response_data = {
                 'processed_data': processed_data
-                
             }
+
             return Response(processed_data, status=ridb_response.status_code)
     
         return Response(processed_data, status=ridb_response.status_code)
@@ -111,8 +111,8 @@ def get_campsite_data(request):
     return Response('Failed to retrieve RIDB API data', status=status.HTTP_200_ok)
 
 
-
-@api_view(['POST'])  # Change this to POST for registration
+#USER / REGISTRATION
+@api_view(['POST'])  
 @permission_classes([AllowAny])  # Allow unauthenticated access for registration
 def register(request):
     data = request.data
@@ -130,7 +130,8 @@ def register(request):
     user = User.objects.create_user(username=email, email=email, password=password)
     
     # Create user profile (if applicable)
-    # profile = UserProfile.objects.create(user=user, ...)
+    profile = Profile.objects.create(user=user, bio='this is an example')
+    
     # Replace UserProfile with your actual profile model and data
 
     # Serialize the user profile data
@@ -139,58 +140,66 @@ def register(request):
     # Process registration logic
     return Response({'message': 'Registration successful', 'user': serialized_user.data})
 
-# GET request to retrieve user profile
+
+# GET REQUEST : RETRIEVE USER PROFILE
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def user_profile(request):
     user = request.user #gets the authenticated user from request
     profile = user.userprofile #retrieves user profile using the 1-2-many relationshup between user model and userProfile model
-    serialized_profile = UserSerializer(profile)
+    serialized_profile = UserSerializer(user, context={'request': request})
     return Response(serialized_profile.data)#returns serialized profile data as HTTP response
 
-#FAVORITES
-# #GET request for retrieving user's favorites
-# @api_view(['GET', 'POST'])
-# @permission_classes([IsAuthenticated])
-# def favorite_facilities(request): 
-#     user = request.user
-#     favorite_facilities = user.userprofile.favorite_facilities.all() #retrieves user's fav facilities 
-#     serialized_facilities = serialized_facilities(favorite_facilities)
-#     return Response(serialized_facilities)#returns serialized facilities as HTTP response
 
-
-# # function that handles listing/creating favorite facilities
-# @api_view(['GET','POST'])
-# def favorite_facilities(request):
-
-#     if request.method == "GET":
-#         favorite_facilities = Facility.objects.filter(userprofile=request.user.userprofile)
-#         serializer = FacilitySerializer(favorite_facilities, many=True)
-#         return Response(serializer.data)
-
-#     if request.method == 'POST':
-#         serializer = FacilitySerializer(data=request.data)
-#         if serializer.is_valid():
-#             serializer.save()
-#             return Response(serializer.data, status=status.HTTP_201_CREATED)
-#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-# #function to handle updating/deleting favorite facilities
-# @api_view(['PUT','DELETE'])
-# def adjusting_favorite_facilities(request,id):
-#     try:
-#         facility = Facility.objects.get(pk=id)
-#     except Facility.DoesNotExist:
-#         return Response(status=status.HTTP_404_NOT_FOUND)
+#FAVORITES ROUTES
+# CREATE / RETRIEVE USER'S FAVORITES
+@api_view(['GET', 'POST'])
+@permission_classes([IsAuthenticated])
+def favorite_facilities(request): 
+    user = request.user
     
-#     if request.method == 'PUT':
-#         serializer = FacilitySerializer(facility,data=request.data)
-#         if serializer.is_valid():
-#             serializer.save()
-#             return Response(serializer.data)
-#         return Response(serializer.errors, status=status.HTTP_404_NOT_FOUND)
+    if request.method == "GET":  
+        favorite_facilities = user.userprofile.favorite_facilities.all() #retrieves user's fav facilities 
+        serialized_facilities = serialized_facilities(favorite_facilities)
+        return Response(serialized_facilities)#returns serialized facilities as HTTP response
+
+    if request.method == 'POST':
+        serializer = FacilitySerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(userprofile=user.userprofile)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+# UPDATE / DELETE USER'S FAVORITES 
+@api_view(['PUT','DELETE'])
+def adjusting_favorite_facilities(request,id):
+    try:
+        facility = Facility.objects.get(pk=id)
+    except Facility.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
     
-#     elif request.method == 'DELETE':
-#         facility.delete()
-#         return Response(status=status.HTTP_204_NO_CONTENT)
+    if request.method == 'PUT':
+        serializer = FacilitySerializer(facility,data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_404_NOT_FOUND)
+    
+    elif request.method == 'DELETE':
+        facility.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+# class UserProfileAPIView(RetrieveUpdateAPIView):
+#     """
+#     Get, Update user profile
+#     """
+#     serializer = ProfileSerializer(favorite_facilities, many=True)
+
+#     queryset = Profile.objects.all()
+#     serializer_class = ProfileSerializer
+#     permission_classes = (IsAuthenticated,)
+
+#     def get_object(self):
+#         return self.request.user.profile
