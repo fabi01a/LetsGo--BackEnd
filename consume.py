@@ -1,4 +1,4 @@
 import requests
 
-response = requests.get('http://127.0.0.1:8000/campsites/')
+response = requests.get('http://127.0.0.1:8000/facilities/')
 print(response.json)
